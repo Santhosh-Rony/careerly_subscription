@@ -15,7 +15,8 @@ CORS(app, origins=["http://localhost:3000", "http://localhost:3001", "http://127
 # Load configuration from config.json
 def load_config():
     try:
-        with open('config.json', 'r') as f:
+        config_path = '/home/santhoshrony7/careerly_subscription/config.json'
+        with open(config_path, 'r') as f:
             return json.load(f)
     except Exception as e:
         print(f"Error loading config: {e}")
@@ -30,7 +31,7 @@ EMAIL_USER = config.get('email_user', '')
 EMAIL_PASSWORD = config.get('email_password', '')
 
 # Store subscriptions in a JSON file
-SUBSCRIPTIONS_FILE = 'subscriptions.json'
+SUBSCRIPTIONS_FILE = '/home/santhoshrony7/careerly_subscription/subscriptions.json'
 
 def load_subscriptions():
     if os.path.exists(SUBSCRIPTIONS_FILE):
