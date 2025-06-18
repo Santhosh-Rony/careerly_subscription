@@ -12,41 +12,22 @@ CORS(app, origins=["http://localhost:3000", "http://localhost:3001", "http://127
      methods=['GET', 'POST', 'OPTIONS'],
      allow_headers=['Content-Type', 'Authorization'])
 
-# Load configuration from environment variables (Railway) or config file (local)
-def load_email_config():
-    # Try environment variables first (for Railway deployment)
-    if os.getenv('EMAIL_USER'):
-        return {
-            'host': os.getenv('EMAIL_HOST', 'smtp.gmail.com'),
-            'port': int(os.getenv('EMAIL_PORT', 587)),
-            'user': os.getenv('EMAIL_USER'),
-            'password': os.getenv('EMAIL_PASSWORD')
-        }
-    
-    # Fallback to config.json for local development
+# Load configuration from config.json
+def load_config():
     try:
-        with open('config.json') as f:
-            config = json.load(f)
-        return {
-            'host': config.get('email', {}).get('host', 'smtp.gmail.com'),
-            'port': config.get('email', {}).get('port', 587),
-            'user': config.get('email', {}).get('user'),
-            'password': config.get('email', {}).get('password')
-        }
-    except FileNotFoundError:
-        print("Warning: config.json not found, using environment variables only")
-        return {
-            'host': os.getenv('EMAIL_HOST', 'smtp.gmail.com'),
-            'port': int(os.getenv('EMAIL_PORT', 587)),
-            'user': os.getenv('EMAIL_USER'),
-            'password': os.getenv('EMAIL_PASSWORD')
-        }
+        with open('config.json', 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading config: {e}")
+        return {}
 
-email_config = load_email_config()
-EMAIL_HOST = email_config['host']
-EMAIL_PORT = email_config['port']
-EMAIL_USER = email_config['user']
-EMAIL_PASSWORD = email_config['password']
+config = load_config()
+
+# Email configuration - use config.json instead of environment variables
+EMAIL_HOST = config.get('email_host', 'smtp.gmail.com')
+EMAIL_PORT = config.get('email_port', 587)
+EMAIL_USER = config.get('email_user', '')
+EMAIL_PASSWORD = config.get('email_password', '')
 
 # Store subscriptions in a JSON file
 SUBSCRIPTIONS_FILE = 'subscriptions.json'
@@ -276,7 +257,9 @@ def health_check():
     return jsonify({
         'status': 'healthy',
         'service': 'careerly-subscription-api',
-        'timestamp': datetime.now().isoformat()
+        'timestamp': datetime.now().isoformat(),
+        'config_loaded': bool(config),
+        'email_configured': bool(EMAIL_USER and EMAIL_PASSWORD)
     }), 200
 
 @app.route('/', methods=['GET'])
